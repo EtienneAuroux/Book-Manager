@@ -10,6 +10,12 @@
         <div class="container">
             <h1 class="mb-4">Yaraku's book manager</h1>
             
+            <!-- Notification of successful action -->
+            @if(session('success'))
+                <div id="success-alert" class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
             <!-- Form to add a book to the database -->
             <form action="{{ route('books.store') }}" method="POST" class="row g-3 mb-4">
                 @csrf
@@ -37,7 +43,7 @@
                     @foreach ($books as $book)
                         <tr>
                             <td>{{ $book->title }}</td>
-                            <td>{{ $book->title }}</td>
+                            <td>{{ $book->author }}</td>
                             <td>
                                 <!-- TODO: Update action -->
                                 <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display:inline;">
@@ -56,5 +62,17 @@
                 </tbody>
             </table>
         </div>
+
+        <script>
+            // The successful action notification fades and disappears after 3 seconds.
+            setTimeout(() => {
+                const alert = document.getElementById('success-alert');
+                if (alert) {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            }, 3000);
+        </script>
     </body>
 </html>

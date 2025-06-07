@@ -82,8 +82,8 @@ class BookController extends Controller
         // Create a new book in the database. We use mass-alignment as defined in the Book model.
         $book = Book::create($validated);
 
-        // Return the created book to the client. Http status code 201 = Created.
-        return response()->json($book, 201);
+        // Redirect to the views/books/index.blade.php page with a success message.
+        return redirect()->route('books.index')->with('success', 'Book added successfully.');
     }
 
     /**
@@ -128,7 +128,7 @@ class BookController extends Controller
         // Note to self: remember that Book extends Model. Each instance in the database has a unique ID (incrementing) even though it was never explicitly declared.
         $book->delete();
 
-        // Notifies the client that the deletion was successful.
-        return response()->json(['message' => 'Book deleted.']);
+        // Redirect to the views/books/index.blade.php page with a success message.
+        return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
     }
 }
