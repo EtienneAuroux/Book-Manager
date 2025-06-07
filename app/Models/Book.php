@@ -22,7 +22,7 @@ class Book extends Model
     /**
      * The attributes that are mass assignable.
      * 
-     * This allows mass-assignment when creating or updating a Book object.
+     * This allows mass-assignment when creating or updating a Book.
      *
      * @var list<string>
      */
@@ -31,11 +31,13 @@ class Book extends Model
         'author',
     ];
 
+    // Note to self:
     // Laravel automatically assumes that every model has an ID primary key.
-    // That's actually done during migration since it calls $table->id().
-    // That means I can do Book::find(int) and $book->id.
+    // This is done during migration with $table->id().
+    // That means I can do Book::find($id) with $id an integer and $book->id.
 
-    // Apparently there is a convention in Eloquent such
-    // that if my database names is the plural snake case form of my model 
-    // then I do not need to specify the model's table name.
+    // Note to self:
+    // Eloquent follows a naming convention such that:
+    // if my database name is the plural snake case form of my model 
+    // then I do not need to specify the table name for the model.
 }

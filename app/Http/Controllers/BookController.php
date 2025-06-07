@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Contains the standard resource methods: index, store, update, destroy.
  * 
- * Routes are defined as follow:
+ * Routes are defined as follows:
  * GET /books           -> index
  * POST /books          -> store
  * PUT /books/{id}      -> update
  * DELETE /books/{id}   -> destroy
  */
-class BookController extends Controller
+class BookController
 {
     /**
      * Display a listing of the books.
@@ -26,8 +29,8 @@ class BookController extends Controller
      * - (optional) string search
      * - (optional) string sort -> title or author (default is title)
      * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -37,7 +40,7 @@ class BookController extends Controller
         // Get the optional parameter for sort, by default sorting is by title.
         $sort = $request->query('sort', 'title');
 
-        // Get the optional parameter for the sorting direction, by default sorting is done ascendantly (alphabetical order).
+        // Get the optional parameter for the sorting direction, by default sorting is done in ascending order (alphabetical order).
         $direction = $request->query('direction', 'asc');
 
         // Get the static method query() from the class Book.
@@ -68,8 +71,8 @@ class BookController extends Controller
      * Require a body in the request with a Book object's attributes.
      * The attributes are string of at most 255 characters.
      * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function store(Request $request)
     {
@@ -81,7 +84,7 @@ class BookController extends Controller
             'author' => 'required|string|max:255',
         ]);
 
-        // Create a new book in the database. We use mass-alignment as defined in the Book model.
+        // Create a new book in the database. We use mass-assignment as defined in the Book model.
         $book = Book::create($validated);
 
         // Redirect to the views/books/index.blade.php page with a success message.
@@ -91,21 +94,21 @@ class BookController extends Controller
     /**
      * Update a Book object's attributes in the database.
      * 
-     * Require a body in the request with at least on of the Book object's attributes.
-     * The attribute(s) can at most be 255 characters long.
+     * Require a body in the request with at least one of the Book object's attributes.
+     * Each attribute must be at most be 255 characters long.
      * 
      * Need the book to be updated for identification.
      * 
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Model\Book $book
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @param Book $book
+     * @return JsonResponse
      */
     public function update(Request $request, Book $book)
     {
-        // Get only the title and author field.
+        // Get only the title and author fields.
         $data = $request->only(['title', 'author']);
 
-        // Because I allow the user to modify either the title or the author of the book, I need to check for empty/null strings.
+        // Because I allow the user to modify either the title or the author of the book, I need to check for null or empty strings.
         $filtered = array_filter($data, function ($value) {
             return $value !== null && $value !== '';
         });
@@ -119,7 +122,7 @@ class BookController extends Controller
             $rules['author'] = 'string|max:255';
         }
 
-        // Checking if what has been filtered is valid with respect to the limit of 255 characters.
+        // Validate the filtered fields to ensure they meet the 255 characters limit.
         $validated = validator($filtered, $rules)->validate();
 
         // Update the book's title and author.
@@ -132,8 +135,8 @@ class BookController extends Controller
     /**
      * Remove the specified Book object from the database.
      * 
-     * @param \App\Model\Book $book
-     * @return \Illuminate\Http\JsonResponse
+     * @param Book $book
+     * @return JsonResponse
      */
     public function destroy(Book $book)
     {
@@ -145,8 +148,27 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
     }
 
-    public function export($type, $format)
+    /**
+     * Export the parts of the database specified by $type in the specified $format.
+     * 
+     * Available export types are:
+     * - 'all' for both the titles and authors of the books
+     * - 'titles' for only the titles of the books
+     * - 'authors' for only the authors of the books
+     * 
+     * Available formats are:
+     * - 'csv' for a CSV file
+     * - 'xml' for a XML file
+     * 
+     * @param string $type      'all', 'titles', 'authors
+     * @param string $format    'csv', 'xml'
+     * @return StreamedResponse|Response
+     */
+    public function export(string $type, string $format)
     {
+        // Note to self: apparently it is possible to not write the type of the arguments and just have export($type, $format).
+        // Note to self: this is too confusing for a PHP beginner like me coming from Java/C/... but I should keep it in mind.
+
         // List of the allowed types for exports. Will be used to validate $type.
         $allowedTypes = ['all', 'titles', 'authors'];
 
@@ -165,6 +187,7 @@ class BookController extends Controller
         // Filling rows according to $type.
         $rows = [];
         if ($type === 'all') {
+            // Note to self: in PHP this is called an associative array.
             $rows = $books->map(fn($book) => ['title' => $book->title, 'author' => $book->author]);
         } elseif ($type === 'titles') {
             $rows = $books->map(fn($book) => ['title' => $book->title]);
@@ -180,17 +203,26 @@ class BookController extends Controller
         }
     }
 
-    // Note to self: confusing how the args don't have a type in the function declaration.
-    private function exportAsCSV($rows, $type) {
+    /**
+     * Create the CSV file based on the provided $rows to export and $type.
+     * 
+     * $type ('all', 'titles', 'authors') is used for the filename.
+     * 
+     * @param Collection $rows
+     * @param string $type
+     * @return StreamedResponse
+     */
+    private function exportAsCSV(Collection $rows, string $type) {
         // Define the name of the CSV file to be created.
         $filename = "books_{$type}.csv";
 
+        // Response header for CSV file downloads
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachement; filename=\"$filename\"",
+            'Content-Type' => 'text/csv', // Tells the browser that this is a CSV file.
+            'Content-Disposition' => "attachment; filename=\"$filename\"", // Tells the browser to download (attachment) the file, sets the name of the file to $filename.
         ];
 
-        // Note to self: 200 is Http status code for success.
+        // Note to self: 200 is HTTP status code for success.
         return new StreamedResponse(function () use ($rows) {
             // This is like C.
             $handle = fopen('php://output', 'w');
@@ -210,7 +242,16 @@ class BookController extends Controller
         }, 200, $headers);
     }
 
-    private function exportAsXML($rows, $type) {
+    /**
+     * Create the XML file based on the provided $rows to export and $type.
+     * 
+     * $type ('all', 'titles', 'authors') is used for the filename.
+     * 
+     * @param Collection $rows
+     * @param string $type
+     * @return Response
+     */
+    private function exportAsXML(Collection $rows, string $type) {
         // Define the name of the XML file to be created.
         $filename = "books_{$type}.xml";
 
@@ -222,16 +263,16 @@ class BookController extends Controller
             // Each book should be in its own <book></book> tag.
             $book = $xml->addChild('book');
             
-            // Add book's attribute based on how $rows was created in the export method (depends on $type).
+            // Add book's attributes based on how $rows was created in the export method (depends on $type).
             foreach ($row as $key => $value) {
                 $book->addChild($key, htmlspecialchars($value));
             }
         }
 
-        // Note to self: headers are same as in the exportAsCSV method.
+        // Response header for XML file downloads
         return response($xml->asXML(), 200, [
-            'Content-Type' => 'application/xml',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+            'Content-Type' => 'application/xml', // Tells the browser that this is a CSV file.
+            'Content-Disposition' => "attachment; filename=\"$filename\"", // Tells the browser to download (attachment) the file, sets the name of the file to $filename.
         ]);
     } 
 }
