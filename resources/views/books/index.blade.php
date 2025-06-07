@@ -3,7 +3,7 @@
     <head>
         <title>Yaraku's book manager</title>
         <meta charset="UTF-8">
-        <!-- Using bootstrap for easy CSS, justified by time constraint of assignment -->
+        <!-- Using bootstrap for easy CSS, same as DASH in Python -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     </head>
     <body class="p-4">
@@ -64,20 +64,41 @@
                                 @endif
                             </a>
                         </th>
-                        <th>Actions</th>
+                        <th>Update</th>
+                        <th>Delete</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($books as $book)
-                        <tr>
-                            <td>{{ $book->title }}</td>
-                            <td>{{ $book->author }}</td>
+                        <tr id="book-row-{{ $book->id }}">
+                            <form action="{{ route('books.update', $book->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <!-- Title of the book -->
+                                <td>
+                                    <span class="static-title">{{ $book->title }}</span>
+                                    <input type="text" name="title" value="{{ $book->title }}" class="form-control d-none editable-title">
+                                </td>
+
+                                <!-- Author of the book -->
+                                <td>
+                                    <span class="static-author">{{ $book->author }}</span>
+                                    <input type="text" name="author" value="{{ $book->author }}" class="form-control d-none editable-author">
+                                </td>
+
+                                <!-- Edit/Update button -->
+                                <td class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-primary edit-btn">Edit</button>
+                                    <!-- Because the update button as type "submit", it will trigger the PUT. -->
+                                    <button type="submit" class="btn btn-sm btn-success d-none update-btn">Update</button>
+                                </td>
+                            </form>
+                            <!-- Delete button -->
                             <td>
-                                <!-- TODO: Update action -->
-                                <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display:inline;">
+                                <form action="{{ route('books.destroy', $book->id) }}" method="POST" onsubmit="return confirm('Delete this book?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this book?')">Delete</button>
+                                    <button class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
@@ -100,7 +121,26 @@
                     alert.style.opacity = '0';
                     setTimeout(() => alert.remove(), 500);
                 }
-            }, 3000);
+            }, 2000);
+
+            // Handles the Edit button. When the user click Edit, the title and author of the corresponding row become editable.
+            // And the Edit button turns into an Update button.
+            // (Searching by class "edit-btn" in the document, applying the logic to all type "buttons" with that class)
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const row = this.closest('tr');
+
+                    // Toggle visibility
+                    row.querySelector('.static-title').classList.add('d-none');
+                    row.querySelector('.static-author').classList.add('d-none');
+                    row.querySelector('.editable-title').classList.remove('d-none');
+                    row.querySelector('.editable-author').classList.remove('d-none');
+
+                    // Hide edit button, show update button
+                    this.classList.add('d-none');
+                    row.querySelector('.update-btn').classList.remove('d-none');
+                });
+            });
         </script>
     </body>
 </html>

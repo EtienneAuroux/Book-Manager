@@ -7,5 +7,7 @@ Route::get('/', function () {
 });
 
 use App\Http\Controllers\BookController;
-// Enables RESTful routing for books
+
+// Enables RESTful routing for books.
+// This line maps the route name to the corresponding method in BookController.
 Route::resource('books', BookController::class);

@@ -101,20 +101,31 @@ class BookController extends Controller
      */
     public function update(Request $request, Book $book)
     {
-        // Check if the incoming Book's attributes are valid.
-        // Since we deal with a book's title and author it makes sense to check for string length.
-        // Side note: In the case of numerous co-authors this might block.
-        // "sometimes" allows partial updates.
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'author' => 'sometimes|required|string|max:255',
-        ]);
+        // Get only the title and author field.
+        $data = $request->only(['title', 'author']);
+
+        // Because I allow the user to modify either the title or the author of the book, I need to check for empty/null strings.
+        $filtered = array_filter($data, function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        // Rules are necessary to validate only what has been filtered.
+        $rules = [];
+        if (array_key_exists('title', $filtered)) {
+            $rules['title'] = 'string|max:255';
+        }
+        if (array_key_exists('author', $filtered)) {
+            $rules['author'] = 'string|max:255';
+        }
+
+        // Checking if what has been filtered is valid with respect to the limit of 255 characters.
+        $validated = validator($filtered, $rules)->validate();
 
         // Update the book's title and author.
         $book->update($validated);
 
-        // Return the updated book.
-        return response()->json($book);
+        // Redirect to the views/books/index.blade.php page with a success message.
+        return redirect()->route('books.index')->with('success', 'Book updated successfully.');
     }
 
     /**
