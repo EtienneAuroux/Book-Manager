@@ -112,6 +112,18 @@
             </table>
         </div>
 
+        <h4 class="mt-4">Export Books in CSV or XML files</h4>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('books.export', ['type' => 'all', 'format' => 'csv']) }}" class="btn btn-outline-primary">CSV - Title & Author</a>
+            <a href="{{ route('books.export', ['type' => 'titles', 'format' => 'csv']) }}" class="btn btn-outline-primary">CSV - Titles Only</a>
+            <a href="{{ route('books.export', ['type' => 'authors', 'format' => 'csv']) }}" class="btn btn-outline-primary">CSV - Authors Only</a>
+
+            <a href="{{ route('books.export', ['type' => 'all', 'format' => 'xml']) }}" class="btn btn-outline-secondary">XML - Title & Author</a>
+            <a href="{{ route('books.export', ['type' => 'titles', 'format' => 'xml']) }}" class="btn btn-outline-secondary">XML - Titles Only</a>
+            <a href="{{ route('books.export', ['type' => 'authors', 'format' => 'xml']) }}" class="btn btn-outline-secondary">XML - Authors Only</a>
+        </div>
+
+
         <script>
             // The successful action notification fades and disappears after 3 seconds.
             setTimeout(() => {

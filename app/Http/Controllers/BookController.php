@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Contains the standard resource methods: index, store, update, destroy.
@@ -143,4 +144,94 @@ class BookController extends Controller
         // Redirect to the views/books/index.blade.php page with a success message.
         return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
     }
+
+    public function export($type, $format)
+    {
+        // List of the allowed types for exports. Will be used to validate $type.
+        $allowedTypes = ['all', 'titles', 'authors'];
+
+        // List of the allowed formats for exports. Will be used to validate $format. 
+        $allowedFormats = ['csv', 'xml'];
+
+        // Check if $type and $format are allowed, abort if not.
+        if (!in_array($type, $allowedTypes) || !in_array($format, $allowedFormats)) {
+            // Brutal but since we should design an UI that makes this impossible, we do want to crash here during development so as to fix any related issue.
+            abort(404);
+        }
+
+        // Get all the books in the database.
+        $books = Book::all();
+
+        // Filling rows according to $type.
+        $rows = [];
+        if ($type === 'all') {
+            $rows = $books->map(fn($book) => ['title' => $book->title, 'author' => $book->author]);
+        } elseif ($type === 'titles') {
+            $rows = $books->map(fn($book) => ['title' => $book->title]);
+        } else {
+            $rows = $books->map(fn($book) => ['author' => $book->author]);
+        }
+
+        // Return according to $format.
+        if ($format === 'csv') {
+            return $this->exportAsCSV($rows, $type);
+        } else {
+            return $this->exportAsXML($rows, $type);
+        }
+    }
+
+    // Note to self: confusing how the args don't have a type in the function declaration.
+    private function exportAsCSV($rows, $type) {
+        // Define the name of the CSV file to be created.
+        $filename = "books_{$type}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachement; filename=\"$filename\"",
+        ];
+
+        // Note to self: 200 is Http status code for success.
+        return new StreamedResponse(function () use ($rows) {
+            // This is like C.
+            $handle = fopen('php://output', 'w');
+
+            // Only write if we have at least one book in the database.
+            if (count($rows) > 0) {
+                // Write the CSV headers.
+                fputcsv($handle, array_keys($rows[0]));
+
+                // Add all books to the CSV
+                foreach ($rows as $row) {
+                    fputcsv($handle, $row);
+                }
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
+
+    private function exportAsXML($rows, $type) {
+        // Define the name of the XML file to be created.
+        $filename = "books_{$type}.xml";
+
+        // Define a new XML document
+        $xml = new \SimpleXMLElement('<books/>');
+
+        // Add all books to the XML.
+        foreach ($rows as $row) {
+            // Each book should be in its own <book></book> tag.
+            $book = $xml->addChild('book');
+            
+            // Add book's attribute based on how $rows was created in the export method (depends on $type).
+            foreach ($row as $key => $value) {
+                $book->addChild($key, htmlspecialchars($value));
+            }
+        }
+
+        // Note to self: headers are same as in the exportAsCSV method.
+        return response($xml->asXML(), 200, [
+            'Content-Type' => 'application/xml',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
+    } 
 }
