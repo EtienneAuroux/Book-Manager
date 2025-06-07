@@ -36,6 +36,9 @@ class BookController extends Controller
         // Get the optional parameter for sort, by default sorting is by title.
         $sort = $request->query('sort', 'title');
 
+        // Get the optional parameter for the sorting direction, by default sorting is done ascendantly (alphabetical order).
+        $direction = $request->query('direction', 'asc');
+
         // Get the static method query() from the class Book.
         // Note to self, :: is to access static members while -> is for instance members.
         $query = Book::query();
@@ -46,18 +49,16 @@ class BookController extends Controller
         }
         
         // If query is a sort, sorts by title or by author.
-        // First identify $sort in the list of possible sorting parameters, then orderBy accordingly.
-        if (in_array($sort, ['title', 'author'])) {
-            $query->orderBy($sort);
+        // First identify $sort in the list of possible sorting parameters, then orderBy according to the direction.
+        if (in_array($sort, ['title', 'author']) && in_array($direction, ['asc', 'desc'])) {
+            $query->orderBy($sort, $direction);
         }
 
         // Get the list of books resulting from the request.
         $books = $query->get();
         
-        // Return the list of books as json.
-        // return response()->json($books);
-
-        return view('books.index', compact('books'));
+        // Return the views/books/index.blade.php page.
+        return view('books.index', compact('books', 'sort', 'direction'));
     }
 
     /**

@@ -16,6 +16,18 @@
                     {{ session('success') }}
                 </div>
             @endif
+            <!-- Form to search a book in the database -->
+            <form action="{{ route('books.index') }}" method="GET" class="row g-3 mb-4">
+                @csrf
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search by title or author" value="{{ request('search') }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="hidden" name="sort" value="{{ request('sort', 'title') }}">
+                    <input type="hidden" name="direction" value="{{ request('direction', 'asc') }}">
+                    <button type="submit" class="btn btn-secondary w-100">Search</button>
+                </div>
+            </form>
             <!-- Form to add a book to the database -->
             <form action="{{ route('books.store') }}" method="POST" class="row g-3 mb-4">
                 @csrf
@@ -34,8 +46,24 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Author</th>
+                        <th>
+                            <!-- Allows books to be sorted by titles in alphabetical or reverse alphabetical order -->
+                            <a href="{{ route('books.index', ['sort' => 'title', 'direction' => ($sort === 'title' && $direction === 'asc') ? 'desc' : 'asc', 'search' => request('search')]) }}">
+                                Title
+                                @if ($sort === 'title')
+                                    {{ $direction === 'asc' ? '↑' : '↓' }}
+                                @endif
+                            </a>
+                        </th>
+                        <th>
+                            <!-- Allows books to be sorted by authors in alphabetical or reverse alphabetical order -->
+                            <a href="{{ route('books.index', ['sort' => 'author', 'direction' => ($sort === 'author' && $direction === 'asc') ? 'desc' : 'asc', 'search' => request('search')]) }}">
+                                Author
+                                @if ($sort === 'author')
+                                    {{ $direction === 'asc' ? '↑' : '↓' }}
+                                @endif
+                            </a>
+                        </th>
                         <th>Actions</th>
                     </tr>
                 </thead>
