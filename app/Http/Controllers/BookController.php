@@ -55,7 +55,9 @@ class BookController extends Controller
         $books = $query->get();
         
         // Return the list of books as json.
-        return response()->json($books);
+        // return response()->json($books);
+
+        return view('books.index', compact('books'));
     }
 
     /**
