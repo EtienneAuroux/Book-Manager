@@ -23,5 +23,6 @@ RUN php artisan migrate --force
 EXPOSE 8000
 
 # Start Laravel app
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+CMD touch /tmp/database.sqlite && php artisan migrate --force && php -S 0.0.0.0:8000 -t public
+
 
