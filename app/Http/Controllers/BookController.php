@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Contains the standard resource methods: index, store, update, destroy.
@@ -20,6 +19,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class BookController
 {
+    // Note to self: PHP convention -> Class/Methods have scope brackets on a separate line.
+    // Note to self: PHP convention -> statements and loops have opening brackets inline.
+
     /**
      * Display a listing of the books.
      * 
@@ -162,7 +164,7 @@ class BookController
      * 
      * @param string $type      'all', 'titles', 'authors
      * @param string $format    'csv', 'xml'
-     * @return StreamedResponse|Response
+     * @return Response
      */
     public function export(string $type, string $format)
     {
@@ -204,15 +206,49 @@ class BookController
     }
 
     /**
+     * Generate a CSV string from a collection of book data.
+     *
+     * Used in exportAsCSV() to build downloadable content.
+     * exportAsCSV() originally returned a StreamedResponse but this was not testable.
+     *
+     * @param Collection $rows
+     * @return string
+     */
+    private function getCSVContent(Collection $rows): string
+    {
+        // Creates a temporary file in memory for writing the $rows.
+        $handle = fopen('php://temp', 'r+');
+
+        // Checks if we have at least one row (i.e. book).
+        if ($rows->isNotEmpty()) {
+            // Writes the column headers using the keys of the associative array.
+            fputcsv($handle, array_keys($rows[0]));
+            // Writes all rows.
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
+        }
+
+        // Points to the beginning of the allocated memory.
+        rewind($handle);
+        // Converts the stream to a string.
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return $csv;
+    }
+
+    /**
      * Create the CSV file based on the provided $rows to export and $type.
      * 
      * $type ('all', 'titles', 'authors') is used for the filename.
      * 
      * @param Collection $rows
      * @param string $type
-     * @return StreamedResponse
+     * @return Response
      */
-    private function exportAsCSV(Collection $rows, string $type) {
+    private function exportAsCSV(Collection $rows, string $type) 
+    {
         // Define the name of the CSV file to be created.
         $filename = "books_{$type}.csv";
 
@@ -220,26 +256,15 @@ class BookController
         $headers = [
             'Content-Type' => 'text/csv', // Tells the browser that this is a CSV file.
             'Content-Disposition' => "attachment; filename=\"$filename\"", // Tells the browser to download (attachment) the file, sets the name of the file to $filename.
+            // Note to self: using " " instead of ' ' allows to use the variable inside the string without having to concatenate.
         ];
 
-        // Note to self: 200 is HTTP status code for success.
-        return new StreamedResponse(function () use ($rows) {
-            // This is like C.
-            $handle = fopen('php://output', 'w');
+        $content = $this->getCSVContent($rows);
 
-            // Only write if we have at least one book in the database.
-            if (count($rows) > 0) {
-                // Write the CSV headers.
-                fputcsv($handle, array_keys($rows[0]));
-
-                // Add all books to the CSV
-                foreach ($rows as $row) {
-                    fputcsv($handle, $row);
-                }
-            }
-
-            fclose($handle);
-        }, 200, $headers);
+        return response($content, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
     }
 
     /**
@@ -251,7 +276,8 @@ class BookController
      * @param string $type
      * @return Response
      */
-    private function exportAsXML(Collection $rows, string $type) {
+    private function exportAsXML(Collection $rows, string $type) 
+    {
         // Define the name of the XML file to be created.
         $filename = "books_{$type}.xml";
 
