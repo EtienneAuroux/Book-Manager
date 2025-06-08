@@ -8,7 +8,14 @@ use Tests\TestCase;
 use App\Models\Book;
 
 /**
- * Use AAA
+ * Contains tests for
+ * - Adding, updating, and deleting books from the database
+ * - Exporting books to CSV and XML formats
+ * - Validating export behavior for empty databases and invalid parameters
+ * - Searching books by title or author
+ * - Sorting books alphabetically and reverse alphabetically by title or author
+ *
+ * Each test follows the AAA (Arrange-Act-Assert) patterns
  */
 class BookTest extends TestCase
 {
