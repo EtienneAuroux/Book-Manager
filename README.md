@@ -13,11 +13,11 @@ The project is dockerized and thoroughly tested.
 
 ## Tech Stack
 
-- Laravel 10+
-- PHP 8.1+
+- Laravel 12.17.0
+- PHP 8.14.7
 - Docker + Laravel Sail
 - SQLite for testing
-- Blade templates + Bootstrap 5
+- Blade templates + Bootstrap 5.3.2
 ---
 
 ## Getting Started
