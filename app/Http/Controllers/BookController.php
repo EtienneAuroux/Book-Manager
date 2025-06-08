@@ -219,10 +219,12 @@ class BookController
         // Creates a temporary file in memory for writing the $rows.
         $handle = fopen('php://temp', 'r+');
 
+        // Writes the column headers using the keys of the associative array.
+        // If a user exports an empty database, it will still shows a valid CSV with correct headers.
+        fputcsv($handle, ['title', 'author']);
+
         // Checks if we have at least one row (i.e. book).
         if ($rows->isNotEmpty()) {
-            // Writes the column headers using the keys of the associative array.
-            fputcsv($handle, array_keys($rows[0]));
             // Writes all rows.
             foreach ($rows as $row) {
                 fputcsv($handle, $row);

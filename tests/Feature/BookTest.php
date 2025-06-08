@@ -135,4 +135,88 @@ class BookTest extends TestCase
         $this->assertStringContainsString('fake title', $response->getContent());
         $this->assertStringContainsString('fake author', $response->getContent());
     }
+
+    /**
+     * Tests that we do indeed fail if we try to export with either the wrong $type or the wrong $format.
+     * (Notations refer to BookController.export())
+     */
+    public function testInvalidExport() 
+    {
+        // Act
+        $responseWrongType = $this->get('/books/export/date/csv'); // BookController.export expects $type to be all, titles or authors.
+        $responseWrongFormat = $this->get('/books/export/all/pdf'); // BookController.export expects $format to be csv or xml.
+
+        // Assert
+        $responseWrongType->assertStatus(404);
+        $responseWrongFormat->assertStatus(404);
+    }
+
+    /**
+     * Tests that cliking on export with an empty database does not fail.
+     */
+    public function testEmptyExport()
+    {
+        // Act
+        $responseEmptyExport = $this->get('/books/export/all/csv');
+
+        // Assert
+        $responseEmptyExport->assertStatus(200);
+        $this->assertStringContainsString('title', $responseEmptyExport->getContent()); // Should at least have a CSV header.
+    }
+
+    /**
+     * Tests that the database can be searched by book title and author.
+     */
+    public function testBookSearchFunctionality()
+    {
+        // Arrange
+        Book::create(['title' => 'fake title', 'author' => 'fake author']);
+        Book::create(['title' => 'eltit ekaf', 'author' => 'rohtua ekaf']); // Mirror of the above to ensure that we can only get one book as a search result.
+
+        // Act
+        $responseTitleBook1 = $this->get('/books?search=fake title');
+        $responseTitleBook2 = $this->get('/books?search=eltit ekaf');
+        $responseAuthorBook1 = $this->get('/books?search=fake author');
+        $responseAuthorBook2 = $this->get('/books?search=rohtua ekaf');
+
+        // Assert
+        $responseTitleBook1->assertSee('fake title');
+        $responseTitleBook1->assertDontSee('eltit ekaf');
+        $responseTitleBook2->assertSee('eltit ekaf');
+        $responseTitleBook2->assertDontSee('fake title');
+        $responseAuthorBook1->assertSee('fake author');
+        $responseAuthorBook1->assertDontSee('rohtua ekaf');
+        $responseAuthorBook2->assertSee('rohtua ekaf');
+        $responseAuthorBook2->assertDontSee('fake author');
+    }
+
+    /**
+     * Tests that books can be sorted by title and author in alphabetical order and reversed alphabetical order.
+     */
+    public function testBookSortFunctionality()
+    {
+        // Arrange
+        Book::create(['title' => 'title AAA', 'author' => 'author AAA']);
+        Book::create(['title' => 'title ZZZ', 'author' => 'author ZZZ']);
+
+        // Act - title descending
+        $responseTitleDesc = $this->get('/books?sort=title&direction=desc');
+        // Assert - title descending
+        $responseTitleDesc->assertSeeInOrder(['title ZZZ', 'title AAA']);
+
+        // Act - title ascending
+        $responseTitleAsc = $this->get('/books?sort=title&direction=asc');
+        // Assert - title ascending
+        $responseTitleAsc->assertSeeInOrder(['title AAA', 'title ZZZ']);
+
+        // Act - author descending
+        $responseAuthorDesc = $this->get('/books?sort=author&direction=desc');
+        // Assert - title descending
+        $responseAuthorDesc->assertSeeInOrder(['author ZZZ', 'author AAA']);
+
+        // Act - author ascending
+        $responseAuthorAsc = $this->get('/books?sort=author&direction=asc');
+        // Assert - author ascending
+        $responseAuthorAsc->assertSeeInOrder(['author AAA', 'author ZZZ']);
+    }
 }
