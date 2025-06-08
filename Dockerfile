@@ -17,8 +17,7 @@ RUN chmod -R 775 storage bootstrap/cache
 RUN touch /tmp/database.sqlite
 
 # Laravel setup
-RUN php artisan key:generate --force && \
-    php artisan migrate --force
+RUN php artisan migrate --force
 
 # Expose port
 EXPOSE 8000
