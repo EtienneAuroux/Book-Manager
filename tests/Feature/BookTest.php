@@ -191,6 +191,22 @@ class BookTest extends TestCase
     }
 
     /**
+     * Tests that searching for a book not in the database does not fail.
+     */
+    public function testBookSearchWithNoResultFunctionality()
+    {
+        // Arrange
+        Book::create(['title' => 'fake title', 'author' => 'fake author']);
+
+        // Act
+        $responseEmptySearch = $this->get('/books?search=bookNotInThatDatabase');
+
+        // Assert
+        $responseEmptySearch->assertStatus(200);
+        $responseEmptySearch->assertSee('You have no books registered');
+    }
+
+    /**
      * Tests that books can be sorted by title and author in alphabetical order and reversed alphabetical order.
      */
     public function testBookSortFunctionality()
