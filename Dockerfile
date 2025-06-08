@@ -23,4 +23,5 @@ RUN php artisan migrate --force
 EXPOSE 8000
 
 # Start Laravel app
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
+
