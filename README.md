@@ -2,7 +2,7 @@
 # Book Manager
 
 A Laravel-based web application to manage a list of books. 
-Yaraku Book Manager allows you to add, update, and delete books in a database.
+Book Manager allows you to add, update, and delete books in a database.
 You can search for books in your title by title and author.
 You can also sort the list of books by alphabetical order or reversed alphabetical order.
 CSV and XML exports are supported for the full database or either only the titles or only the authors.
@@ -101,8 +101,3 @@ To run tests:
 
 See LICENSE.md for details.
 
----
-
-## Acknowledgements
-
-Thanks to Yaraku for the assignment and the opportunity to learn a bit about PHP with Laravel and Docker.
