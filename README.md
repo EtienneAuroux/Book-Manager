@@ -24,7 +24,7 @@ The project is dockerized and thoroughly tested.
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/EtienneAuroux/yaraku-code-test.git
+git clone https://github.com/EtienneAuroux/Book-Manager.git
 cd yaraku-book-manager
 ```
 
