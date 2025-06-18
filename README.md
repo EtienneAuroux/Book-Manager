@@ -25,7 +25,6 @@ The project is dockerized and thoroughly tested.
 
 ```bash
 git clone https://github.com/EtienneAuroux/Book-Manager.git
-cd yaraku-book-manager
 ```
 
 ### 2. Start Docker
