@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Yaraku's book manager</title>
+        <title>Book Manager</title>
         <meta charset="UTF-8">
         <!-- Using bootstrap for styling. (Familiar to me since it is used with DASH in Python) -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
