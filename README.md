@@ -1,5 +1,5 @@
 
-# Yaraku Book Manager
+# Book Manager
 
 A Laravel-based web application to manage a list of books. 
 Yaraku Book Manager allows you to add, update, and delete books in a database.
